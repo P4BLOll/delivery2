@@ -16,7 +16,7 @@ export default function Index() {
         setLoginErrado(!loginCorreto);
 
         if (loginCorreto) {
-            router.push("/dashboard");
+            router.push("/pokedex");
         }
     }
 
