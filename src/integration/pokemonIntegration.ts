@@ -5,7 +5,7 @@ const API_URL = axios.create({
     baseURL: 'https://pokeapi.co/api/v2',
 });
 
-export const getPokemon = async (limit = 151): Promise<Pokemon[]> => {
+export const getPokemon = async (limit = 721): Promise<Pokemon[]> => {
   const response = await API_URL.get(`/pokemon?limit=${limit}`);
   const list = response.data.results;
 

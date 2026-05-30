@@ -11,7 +11,7 @@ export default function Index() {
     const [loginErrado, setLoginErrado] = useState(false);
 
     function verificarLogin() {
-        const loginCorreto = usuario === "Neyma" && senha === "vaiBrasil";
+        const loginCorreto = usuario === "Neyma" && senha === "123";
 
         setLoginErrado(!loginCorreto);
 
@@ -92,4 +92,6 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         textAlign: "center",
     },
+
+
 });

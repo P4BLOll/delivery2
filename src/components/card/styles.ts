@@ -3,10 +3,10 @@ import { StyleSheet } from "react-native";
 export const Styles = StyleSheet.create({
     card: {
         width: "100%",
-        maxWidth: 150,
-        minHeight: 200,
+        maxWidth: 400,
+        minHeight: 500,
 
-        backgroundColor: "#ffdfdf",
+        backgroundColor: "#cecece",
         borderRadius: 16,
         paddingHorizontal: 24,
         paddingVertical: 28,

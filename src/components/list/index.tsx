@@ -1,9 +1,6 @@
 import React from 'react';
-import { ViewStyle } from 'react-native';
-import { style } from "./style";
-import { FlatList } from 'react-native';
-
-import { Card } from '@/components/card';
+import { View, ViewStyle, FlatList } from 'react-native';
+import { style, styles } from "./styles";
 
 interface ListProps {
   data: any[];
@@ -22,10 +19,12 @@ export function List({
     <FlatList
       data={data}
       keyExtractor={(item) => String(item.id ?? item.index)}
+      numColumns={3} // Força a exibição em 3 colunas
+      columnWrapperStyle={styles.columnWrapper} // Controla o espaçamento da linha
       renderItem={({ item }) => (
-        <Card style={[style.cardMargin, cardStyle?.(item)]}>
+        <View style={[styles.pokedexCard, cardStyle?.(item)]}>
           {renderItemContent(item)}
-        </Card>
+        </View>
       )}
       onEndReached={onLoadMore}
       onEndReachedThreshold={0.2}
