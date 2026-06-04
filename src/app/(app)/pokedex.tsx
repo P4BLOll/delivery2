@@ -3,36 +3,7 @@ import { getPokemon } from '@/integration/pokemonIntegration';
 import { Pokemon } from '@/@types/pokemon';
 import { View, Text, ActivityIndicator, Image, StyleSheet } from 'react-native';
 import { List } from '@/components/list';
-
-const TYPE_COLORS: { [key: string]: string } = {
-  normal: '#A8A77A',
-  fire: '#FF4216',
-  water: '#3393FF',
-  grass: '#46C03E',
-  electric: '#FFE114',
-  ice: '#44DEC9',
-  fighting: '#E03058',
-  poison: '#B556D6',
-  ground: '#E88547',
-  flying: '#8FA9DE',
-  psychic: '#FF5261',
-  bug: '#89C81A',
-  rock: '#CDBD8C',
-  ghost: '#5669C9',
-  dragon: '#0076E6',
-  dark: '#4F4756',
-  steel: '#5092A8',
-  fairy: '#FF8BE6',
-};
-
-const STAT_COLORS: { [key: string]: string } = {
-  'hp': '#00FF66',
-  'attack': '#FF4500',
-  'defense': '#FFFF00',
-  'special-attack': '#00FFFF',
-  'special-defense': '#2600ff',
-  'speed': '#FF007F',
-};
+import { COLORS, TYPE_COLORS, STAT_COLORS } from '@/constants/Colors';
 
 export default function Pokedex() {
   const [loading, setLoading] = useState(true);
@@ -59,7 +30,10 @@ export default function Pokedex() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#FF3333" />
+        <ActivityIndicator
+          size="large"
+          color={COLORS.activityIndicator}
+        />
       </View>
     );
   }
@@ -70,7 +44,9 @@ export default function Pokedex() {
       onLoadMore={handleLoadMore}
       cardStyle={(pokemon) => {
         const primaryType = pokemon.tipos[0];
-        const neonColor = TYPE_COLORS[primaryType] || '#29292E';
+        const neonColor =
+        TYPE_COLORS[primaryType] ||
+        COLORS.defaultCardBorder;
         return {
           borderColor: neonColor,
           borderWidth: 1.5,
@@ -97,7 +73,9 @@ export default function Pokedex() {
               
               <View style={styles.typesContainer}>
                 {pokemon.tipos.map((tipo: string) => {
-                  const badgeColor = TYPE_COLORS[tipo] || '#718096';
+                  const badgeColor =
+                    TYPE_COLORS[tipo] ||
+                    COLORS.defaultTypeBadge;
                   return (
                     <View key={tipo} style={[styles.typeBadge, { backgroundColor: badgeColor }]}>
                       <Text style={styles.typeText}>{tipo}</Text>
@@ -111,7 +89,9 @@ export default function Pokedex() {
             <View style={styles.statsContainer}>
               {pokemon.poderes.map((stat: { nome: string; forca: number }) => {
                 const percentage = Math.min((stat.forca / 255) * 100, 100);
-                const barColor = STAT_COLORS[stat.nome] || '#4B5563'; 
+                const barColor =
+                STAT_COLORS[stat.nome] ||
+                COLORS.defaultStatColor;
 
                 return (
                   <View key={stat.nome} style={styles.statRow}>
@@ -165,97 +145,113 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0A0A0C',
+    backgroundColor: COLORS.background,
   },
+
   cardContent: {
     flexDirection: 'row',
     width: '100%',
     alignItems: 'center',
   },
+
   leftColumn: {
     flex: 0.65,
     paddingRight: 8,
   },
+
   rightColumn: {
     flex: 0.35,
     height: 125,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6, // Define um espaço fixo e sutil entre o ID, o Nome e as Badges
+    gap: 6,
     marginBottom: 8,
     flexWrap: 'nowrap',
   },
+
   pokemonId: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#4E4E5A',
+    color: COLORS.textMuted,
   },
+
   pokemonName: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: COLORS.text,
     textTransform: 'capitalize',
-    flexShrink: 1, // Se o nome for gigantesco, ele comprime um pouco para preservar os tipos
+    flexShrink: 1,
   },
+
   pokemonImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
   },
+
   typesContainer: {
     flexDirection: 'row',
     gap: 4,
     alignItems: 'center',
-    // Retirado o 'marginLeft: auto' para que fique colado ao nome
   },
+
   typeBadge: {
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 4,
   },
+
   typeText: {
     fontSize: 7.5,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: COLORS.text,
     textTransform: 'uppercase',
   },
+
   statsContainer: {
     width: '100%',
     borderTopWidth: 1,
-    borderTopColor: '#16161A', 
+    borderTopColor: COLORS.border,
     paddingTop: 6,
   },
+
   statRow: {
     marginBottom: 4,
     width: '100%',
   },
+
   statInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 2,
   },
+
   statName: {
     fontSize: 8,
-    color: '#71717A',
+    color: COLORS.textSecondary,
     fontWeight: '800',
   },
+
   statValue: {
     fontSize: 8,
     fontWeight: 'bold',
   },
+
   progressBarBackground: {
     height: 4,
     width: '100%',
-    backgroundColor: '#16161A', 
+    backgroundColor: COLORS.border,
     borderRadius: 2,
   },
+
   progressBarFill: {
     height: '100%',
     borderRadius: 2,
-    overflow: 'visible', 
+    overflow: 'visible',
   },
 });

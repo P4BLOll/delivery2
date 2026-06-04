@@ -4,19 +4,24 @@ import { router } from "expo-router";
 import { Button } from "@/components/button";
 import { Input } from "@/components/input";
 import { Card } from "@/components/card";
+import { useAuth } from '@/context/AuthContext';
 
 export default function Index() {
-    const [usuario, setUsuario] = useState("");
+    const [name, setName] = useState("");
     const [senha, setSenha] = useState("");
     const [loginErrado, setLoginErrado] = useState(false);
 
+    const { signIn } = useAuth();
+    const { signOut } = useAuth();
+
     function verificarLogin() {
-        const loginCorreto = usuario === "Neyma" && senha === "123";
+        const success = signIn(name, senha);
 
-        setLoginErrado(!loginCorreto);
-
-        if (loginCorreto) {
-            router.push("/pokedex");
+        if (success) {
+            router.replace('/pokedex');
+        }else {
+            setLoginErrado(true);
+            return signOut();
         }
     }
 
@@ -32,8 +37,8 @@ export default function Index() {
                 <View style={styles.form}>
                     <Input
                         placeholder="Usuário"
-                        value={usuario}
-                        onChangeText={setUsuario}
+                        value={name}
+                        onChangeText={setName}
                     />
 
                     <Input
