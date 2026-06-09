@@ -1,0 +1,58 @@
+import { StyleSheet } from "react-native";
+
+export const Styles = StyleSheet.create({
+    container: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        position: "relative",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "transparent", // Remove totalmente o fundo sólido
+        borderWidth: 2,
+        borderColor: "#FF3333", // Borda neon vermelha
+
+        // Efeito de brilho neon para iOS e Android
+        shadowColor: "#FF3333",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.7,
+        shadowRadius: 6,
+        elevation: 4,
+    },
+    centerLine: {
+        position: "absolute",
+        width: "100%",
+        height: 2,
+        backgroundColor: "#FF3333",
+    },
+    outerCenterCircle: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: "#0A0A0C", // Mascara a linha central usando a cor de fundo oficial do app
+        borderWidth: 2,
+        borderColor: "#FF3333",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 10,
+    },
+    innerCenterCircle: {
+        width: 4,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: "#FF3333",
+    },
+    successIndicator: {
+        position: "absolute",
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        borderWidth: 2,
+        borderColor: "#00FF66", // Brilho de captura bem-sucedida em verde neon
+        opacity: 0,
+        shadowColor: "#00FF66",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.9,
+        shadowRadius: 8,
+    }
+});

@@ -8,5 +8,5 @@ export interface Pokemon{
     nome: string;
     imagem: string;
     tipos: string[];
-    poderes: string[];
+    poderes: Poder[];
 }

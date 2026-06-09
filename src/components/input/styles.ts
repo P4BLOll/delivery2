@@ -2,25 +2,16 @@ import { StyleSheet } from "react-native";
 
 export const Styles = StyleSheet.create({
     input: {
-        width: "90%",
-        height: 50,
-        backgroundColor: "#eaeaea",
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: "#000000",
-        marginBottom: 12,
+        width: "100%", // Ajustado para 100% para preencher o card uniformemente
+        height: 52,
+        backgroundColor: "#16161A", // Fundo interno em harmonia com o overlay do menu
+        borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 12,
-        color: "#000000",
+        color: "#FFFFFF", // Texto totalmente branco para leitura perfeita
         fontSize: 16,
 
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        elevation: 2,
+        borderWidth: 1.5,
+        borderColor: "#29292E", // Linha de contorno ultra-discreta de divisão
     },
 });

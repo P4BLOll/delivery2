@@ -1,19 +1,26 @@
-import { TouchableOpacity, Text, TouchableOpacityProps, StyleProp, ViewStyle } from "react-native"
+import React from "react";
+import { TouchableOpacity, Text, TouchableOpacityProps, StyleProp, ViewStyle, ActivityIndicator } from "react-native";
 import { Styles } from "./styles";
 
 type Props = TouchableOpacityProps & {
     title: string;
     style?: StyleProp<ViewStyle>; 
-    onPress?: () => void;
+    isLoading?: boolean; // Propriedade adicionada para controle centralizado de loading
 }
 
-export function Button({ title, style, ...rest }: Props) {
+export function Button({ title, style, isLoading, disabled, ...rest }: Props) {
     return (
         <TouchableOpacity 
-            activeOpacity={0.5} 
-            style={[Styles.button, style]} 
-            {...rest}>
-            <Text style={Styles.title}>{title}</Text>
+            activeOpacity={0.7} 
+            style={[Styles.button, (disabled || isLoading) && Styles.disabled, style]} 
+            disabled={disabled || isLoading}
+            {...rest}
+        >
+            {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+                <Text style={Styles.title}>{title}</Text>
+            )}
         </TouchableOpacity>
-    )
+    );
 }
