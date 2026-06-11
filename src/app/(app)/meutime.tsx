@@ -8,7 +8,12 @@ import {
   FlatList,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getPokemonById } from "@/integration/pokemonIntegration";
+import { useAuth } from "@/context/AuthContext";
+import {
+  getPokemonById,
+  getBackendTeam,
+  updateBackendTeam,
+} from "@/integration/pokemonIntegration";
 import { Pokemon } from "@/@types/pokemon";
 import { COLORS } from "@/constants/Colors";
 import { Menu } from "@/components/menu";
@@ -19,42 +24,47 @@ import { Header } from "@/components/header";
 const MAX_TEAM_SIZE = 6;
 
 export default function MeuTime() {
+  const { userId } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [rolling, setRolling] = useState(false);
+  
   const [team, setTeam] = useState<(Pokemon | null)[]>(
     Array(MAX_TEAM_SIZE).fill(null),
   );
+  
   const [acquired, setAcquired] = useState<Pokemon[]>([]);
 
   useEffect(() => {
-    async function load() {
+    async function loadData() {
+      if (!userId) return;
       try {
-        const [savedTeam, savedAcquired] = await Promise.all([
-          AsyncStorage.getItem("@PokeApp:team"),
-          AsyncStorage.getItem("@PokeApp:acquired"),
-        ]);
-        if (savedTeam) setTeam(JSON.parse(savedTeam));
+        setLoading(true);
+        
+        const backendTeam = await getBackendTeam(userId);
+        if (backendTeam) setTeam(backendTeam);
+
+        const savedAcquired = await AsyncStorage.getItem("@PokeApp:acquired");
         if (savedAcquired) setAcquired(JSON.parse(savedAcquired));
+
       } catch (e) {
-        console.log("Erro ao carregar dados", e);
+        console.log("Erro ao sincronizar dados com o servidor:", e);
+        Alert.alert("Erro", "Não foi possível carregar seu time do servidor.");
       } finally {
         setLoading(false);
       }
     }
-    load();
-  }, []);
+    loadData();
+  }, [userId]);
 
   useEffect(() => {
     if (loading) return;
-    AsyncStorage.multiSet([
-      ["@PokeApp:team", JSON.stringify(team)],
-      ["@PokeApp:acquired", JSON.stringify(acquired)],
-    ]).catch((e) => console.log("Erro ao salvar", e));
-  }, [team, acquired]);
+    AsyncStorage.setItem("@PokeApp:acquired", JSON.stringify(acquired))
+      .catch((e) => console.log("Erro ao salvar Pokémons adquiridos:", e));
+  }, [acquired, loading]);
 
   const handleObtainPokemon = async () => {
-    if (rolling) return;
+    if (rolling || !userId) return;
     setRolling(true);
     try {
       const randomId = Math.floor(Math.random() * 1025) + 1;
@@ -75,16 +85,17 @@ export default function MeuTime() {
       setAcquired((prev) => [...prev, pokemon]);
       Alert.alert(
         "Capturado! 🎉",
-        `${pokemon.nome.toUpperCase()} foi adicionado aos adquiridos.`,
+        `${pokemon.nome.toUpperCase()} foi adicionado aos seus Pokémon adquiridos.`,
       );
-    } catch {
-      Alert.alert("Erro", "Falha ao conectar com a rede pokémon.");
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Erro", "Falha ao conectar com a rede Pokémon.");
     } finally {
       setRolling(false);
     }
   };
 
-  const handleSelectAcquired = (pokemon: Pokemon) => {
+  const handleSelectAcquired = async (pokemon: Pokemon) => {
     const slot = team.findIndex((p) => p === null);
     if (slot === -1) {
       Alert.alert(
@@ -93,26 +104,50 @@ export default function MeuTime() {
       );
       return;
     }
-    setTeam((prev) => {
-      const t = [...prev];
-      t[slot] = pokemon;
-      return t;
-    });
-    setAcquired((prev) => prev.filter((p) => p.index !== pokemon.index));
+
+    if (!userId) return;
+
+    try {
+      setLoading(true);
+      await updateBackendTeam(userId, "0", pokemon.index);
+
+      setTeam((prev) => {
+        const t = [...prev];
+        t[slot] = pokemon;
+        return t;
+      });
+      setAcquired((prev) => prev.filter((p) => p.index !== pokemon.index));
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Erro", "O servidor rejeitou a alteração do time.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSlotPress = (index: number) => {
+  const handleSlotPress = async (index: number) => {
     const pokemon = team[index];
-    if (!pokemon) return;
-    setTeam((prev) => {
-      const t = [...prev];
-      t[index] = null;
-      return t;
-    });
-    setAcquired((prev) => [...prev, pokemon]);
+    if (!pokemon || !userId) return;
+
+    try {
+      setLoading(true);
+      await updateBackendTeam(userId, pokemon.index, "0");
+
+      setTeam((prev) => {
+        const t = [...prev];
+        t[index] = null;
+        return t;
+      });
+      setAcquired((prev) => [...prev, pokemon]);
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Erro", "Não foi possível remover o Pokémon do time no servidor.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (loading) {
+  if (loading && team.every(p => p === null) && acquired.length === 0) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#FF3333" />
@@ -146,7 +181,6 @@ export default function MeuTime() {
                       <PokemonCard
                         pokemon={pokemon}
                         onPress={() => handleSlotPress(index)}
-                        compact={false}
                       />
                     ) : (
                       <View style={styles.emptySlotCard}>
@@ -179,7 +213,7 @@ export default function MeuTime() {
         ListEmptyComponent={
           <View style={styles.emptyListContainer}>
             <Text style={styles.emptyListText}>
-              Nenhum Pokémon adquirido. Use o botão acima para sortear!
+              Nenhum Pokémon na reserva. Use o botão acima para sortear!
             </Text>
           </View>
         }
@@ -188,7 +222,6 @@ export default function MeuTime() {
             <PokemonCard
               pokemon={item}
               onPress={() => handleSelectAcquired(item)}
-              compact={false}
             />
           </View>
         )}
@@ -236,7 +269,7 @@ const styles = StyleSheet.create({
   },
   emptySlotCard: {
     width: "100%",
-    height: 185,
+    height: 125, 
     backgroundColor: "#1A1A1E",
     borderRadius: 14,
     alignItems: "center",

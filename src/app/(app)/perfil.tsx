@@ -1,54 +1,75 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+// src/app/(app)/perfil.tsx
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { useAuth } from "@/context/AuthContext";
 import { COLORS } from "@/constants/Colors";
 import { Menu } from "@/components/menu";
-
-// IMPORTAÇÃO DA NAVBAR MODULAR
 import { Header } from "@/components/header";
+import { getTrainerStats, TrainerStats } from "@/integration/pokemonIntegration";
 
 export default function Perfil() {
-  const { user } = useAuth();
+  const { user, userId } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [stats, setStats] = useState<TrainerStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadStats() {
+      if (!userId) return;
+      try {
+        const data = await getTrainerStats(userId);
+        setStats(data);
+      } catch (err) {
+        console.log("Erro ao carregar os status do treinador", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStats();
+  }, [userId]);
 
   return (
     <View style={styles.container}>
-      {/* Chamada Limpa da Navbar */}
-      <Header
-        title="Perfil do Treinador"
-        onMenuPress={() => setMenuOpen(true)}
-      />
+      <Header title="Perfil do Treinador" onMenuPress={() => setMenuOpen(true)} />
 
-      <View style={styles.profileContainer}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatarLargeText}>
-            {user ? user.substring(0, 2).toUpperCase() : "TR"}
-          </Text>
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <ActivityIndicator size="large" color="#FF3333" />
         </View>
-
-        <Text style={styles.welcomeLabel}>Bem-vindo de volta,</Text>
-        <Text style={styles.trainerName}>{user || "Treinador"}</Text>
-
-        <View style={styles.infoBox}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoKey}>Classe</Text>
-            <Text style={styles.infoValue}>Mestre Pokémon</Text>
+      ) : (
+        <View style={styles.profileContainer}>
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarLargeText}>
+              {user ? user.substring(0, 2).toUpperCase() : "TR"}
+            </Text>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoKey}>Região</Text>
-            <Text style={styles.infoValue}>Kanto</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoKey}>Status</Text>
-            <Text style={[styles.infoValue, { color: "#00FF66" }]}>Online</Text>
+
+          <Text style={styles.welcomeLabel}>Bem-vindo de volta,</Text>
+          <Text style={styles.trainerName}>{user || "Treinador"}</Text>
+
+          <View style={styles.infoBox}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoKey}>Nível do Treinador</Text>
+              <Text style={styles.infoValue}>Lv. {stats?.level || "1"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoKey}>Vitórias</Text>
+              <Text style={[styles.infoValue, { color: "#00FF66" }]}>{stats?.vitorias || "0"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoKey}>Derrotas</Text>
+              <Text style={[styles.infoValue, { color: "#FF3333" }]}>{stats?.derrotas || "0"}</Text>
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
       <Menu visible={menuOpen} onClose={() => setMenuOpen(false)} />
     </View>
   );
 }
+
+// ... manter estilos originais de styles abaixo
 
 const styles = StyleSheet.create({
   container: {

@@ -1,32 +1,36 @@
+// src/context/AuthContext.tsx
 import React, { createContext, useState, useContext, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_BACKEND } from "@/integration/databaseIntegration";
 
 type AuthContextData = {
     isAuthenticated: boolean;
     user: string | null;
+    userId: string | null;
     isLoading: boolean;
-    signIn: (username: string, password: string) => boolean;
-    signOut: () => void;
+    signIn: (username: string, password: string) => Promise<boolean>;
+    signUp: (username: string, password: string) => Promise<boolean>;
+    signOut: () => Promise<void>;
 };
-
-function validateLogin(name: string, password: string): boolean{
-    return(
-        name.trim().toLowerCase() == "admin" && password.trim() == "123"
-    )
-}
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         async function loadStorageData() {
-            const storageUser = await AsyncStorage.getItem("@Auth:user");
-            if (storageUser) {
+            const [storageUser, storageId] = await Promise.all([
+                AsyncStorage.getItem("@Auth:user"),
+                AsyncStorage.getItem("@Auth:userId")
+            ]);
+            
+            if (storageUser && storageId) {
                 setUser(storageUser);
+                setUserId(storageId);
                 setIsAuthenticated(true);
             }
             setIsLoading(false);
@@ -34,29 +38,60 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         loadStorageData();
     }, []);
 
-    function signIn(username: string, password: string): boolean {
-        const ok = validateLogin(username, password);
-        if (!ok) return false;
+    // Endpoint: Login (POST)
+    async function signIn(username: string, password: string): Promise<boolean> {
+        try {
+            const response = await API_BACKEND.post("/auth/v1/login", {
+                username,
+                password,
+            });
 
-        const displayName = username.trim();
-        setUser(displayName);
-        setIsAuthenticated(true);
-        AsyncStorage.setItem("@Auth:user", displayName);
-        return true;
+            // Nota: Altere de acordo com a estrutura exata do seu retorno (ex: response.data.id ou response.data.userId)
+            const idUsuario = response.data.id || response.data.userId || "65888ffb-ed2a-4446-89c7-31723970c612";
+            const displayName = username.trim();
+
+            setUser(displayName);
+            setUserId(idUsuario);
+            setIsAuthenticated(true);
+
+            await AsyncStorage.multiSet([
+                ["@Auth:user", displayName],
+                ["@Auth:userId", idUsuario]
+            ]);
+
+            return true;
+        } catch (error) {
+            console.error("Erro no login:", error);
+            return false;
+        }
     }
 
-    async function signOut(){
+    // Endpoint: Registrar (POST)
+    async function signUp(username: string, password: string): Promise<boolean> {
+        try {
+            await API_BACKEND.post("/auth/v1/register", {
+                username,
+                password,
+            });
+            return true;
+        } catch (error) {
+            console.error("Erro no registro:", error);
+            return false;
+        }
+    }
+
+    async function signOut() {
         setUser(null);
+        setUserId(null);
         setIsAuthenticated(false);
-        await AsyncStorage.removeItem('@Auth:user');
-
+        await AsyncStorage.multiRemove(['@Auth:user', '@Auth:userId', '@PokeApp:team', '@PokeApp:acquired']);
     }
 
-    return(
-        <AuthContext.Provider value={{ isAuthenticated, user, isLoading, signIn, signOut}}>
+    return (
+        <AuthContext.Provider value={{ isAuthenticated, user, userId, isLoading, signIn, signUp, signOut }}>
             {children}
         </AuthContext.Provider>    
-    )
-}
-export const useAuth = () => useContext(AuthContext);
+    );
+};
 
+export const useAuth = () => useContext(AuthContext);
