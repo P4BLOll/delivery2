@@ -33,12 +33,14 @@ export function Menu({ visible, onClose }: MenuProps) {
       onRequestClose={onClose}
     >
       <View style={Styles.overlay}>
+        {/* Área transparente atrás do card — fecha ao tocar */}
         <TouchableOpacity
           style={Styles.clickableOverlay}
           onPress={onClose}
           activeOpacity={1}
         />
 
+        {/* Card central */}
         <View style={Styles.menuContainer}>
           {/* Header: Dados do Treinador */}
           <View style={Styles.header}>
@@ -90,13 +92,25 @@ export function Menu({ visible, onClose }: MenuProps) {
               />
               <Text style={Styles.linkText}>Meu Perfil</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+            style={Styles.linkItem}
+              onPress={() => navigateTo("/batalha")}
+            >
+              <MaterialCommunityIcons
+                name="sword"
+                size={22}
+              color="#FF8BE6" // Cor customizada ou vinda de suas constantes
+            />
+            <Text style={Styles.linkText}>Arena de Batalha</Text>
+          </TouchableOpacity>
           </View>
 
           {/* CORRIGIDO: Agora consome o componente unificado Button */}
           <Button
             title="Sair do Aplicativo"
             onPress={handleLogout}
-            style={Styles.logoutButton}
+            style={[Styles.logoutButton, { height: 44 }]}
           />
         </View>
       </View>

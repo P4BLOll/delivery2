@@ -2,7 +2,6 @@ import { StyleSheet } from "react-native";
 import { COLORS } from "@/constants/Colors";
 
 export const Styles = StyleSheet.create({
-  // ADICIONADO: Toda a estrutura estática do card foi movida para aqui
   card: {
     borderWidth: 1.5,
     backgroundColor: '#000000',
@@ -11,20 +10,20 @@ export const Styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 6,
     elevation: 5,
-    width: '100%', // Aqui dentro, o '100%' é validado nativamente pelo React Native
+    width: '100%',
+    overflow: 'hidden',
   },
   cardContent: {
     flexDirection: 'row',
     width: '100%',
-    alignItems: 'center',
+    alignItems: 'center', // Alinha tudo verticalmente ao centro (Corrige o desalinhamento)
   },
   leftColumn: {
-    flex: 0.65,
-    paddingRight: 8,
+    flex: 0.62, // Define um limite máximo para o comprimento dos status
+    paddingRight: 4,
   },
   rightColumn: {
-    flex: 0.35,
-    height: 125,
+    flex: 0.38, // Garante uma área proporcional e maior para a imagem
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -47,9 +46,15 @@ export const Styles = StyleSheet.create({
     textTransform: 'capitalize',
     flexShrink: 1,
   },
+  // Imagens muito maiores e com proporção ideal para preencher o bloco da direita
   pokemonImage: {
-    width: '100%',
-    height: '100%',
+    width: 130,
+    height: 130,
+    resizeMode: 'contain',
+  },
+  pokemonImageCompact: {
+    width: 85, 
+    height: 85,
     resizeMode: 'contain',
   },
   typesContainer: {
@@ -76,7 +81,7 @@ export const Styles = StyleSheet.create({
     paddingTop: 6,
   },
   statRow: {
-    marginBottom: 4,
+    marginBottom: 3,
     width: '100%',
   },
   statInfo: {
@@ -102,6 +107,5 @@ export const Styles = StyleSheet.create({
   progressBarFill: {
     height: '100%',
     borderRadius: 2,
-    overflow: 'visible',
   },
 });

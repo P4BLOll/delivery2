@@ -7,61 +7,44 @@ import { Styles } from "./styles";
 interface PokemonCardProps {
   pokemon: Pokemon;
   onPress?: () => void;
+  onLongPress?: () => void;
   compact?: boolean;
+  highlightedStat?: string | null; // Nova prop para a animação de sorteio
 }
 
 export function PokemonCard({
   pokemon,
   onPress,
+  onLongPress,
   compact = false,
+  highlightedStat = null,
 }: PokemonCardProps) {
   const primaryType = pokemon.tipos[0];
   const neonColor = TYPE_COLORS[primaryType] || COLORS.defaultCardBorder;
+
+  // Condição para mostrar os status: ou não é compacto, ou tem um status em destaque/sorteio rolando
+  const showStats = !compact || highlightedStat !== null;
 
   return (
     <TouchableOpacity
       style={[
         Styles.card,
-        {
-          borderColor: neonColor,
-          shadowColor: neonColor,
-          padding: compact ? 8 : 12,
-        },
+        { borderColor: neonColor, shadowColor: neonColor, padding: 12 },
       ]}
       onPress={onPress}
-      disabled={!onPress}
+      onLongPress={onLongPress}
+      disabled={!onPress && !onLongPress}
       activeOpacity={0.7}
     >
-      <View
-        style={[
-          Styles.cardContent,
-          compact && { flexDirection: "column", alignItems: "center" },
-        ]}
-      >
-        {/* COLUNA DA ESQUERDA: INFORMAÇÕES E STATUS */}
-        <View
-          style={[
-            Styles.leftColumn,
-            compact && {
-              flex: 1,
-              paddingRight: 0,
-              width: "100%",
-              alignItems: "center",
-            },
-          ]}
-        >
-          {/* HEADER DO CARD: ID, NOME E TIPOS */}
-          <View
-            style={[
-              Styles.cardHeader,
-              compact && { flexDirection: "column", gap: 4, marginBottom: 4 },
-            ]}
-          >
+      <View style={Styles.cardContent}>
+        {/* COLUNA DA ESQUERDA: ID, NOME, TIPOS E STATS */}
+        <View style={Styles.leftColumn}>
+          {/* HEADER */}
+          <View style={Styles.cardHeader}>
             <Text style={Styles.pokemonId}>#{pokemon.index}</Text>
             <Text style={Styles.pokemonName} numberOfLines={1}>
               {pokemon.nome}
             </Text>
-
             <View style={Styles.typesContainer}>
               {pokemon.tipos.map((tipo: string) => {
                 const badgeColor = TYPE_COLORS[tipo] || COLORS.defaultTypeBadge;
@@ -76,36 +59,42 @@ export function PokemonCard({
               })}
             </View>
           </View>
-
-          {/* CONTAINER DOS STATUS BAR */}
-          {!compact && (
+          
+          {/* STATS */}
+          {showStats && (
             <View style={Styles.statsContainer}>
               {pokemon.poderes.map((stat: Poder) => {
                 const percentage = Math.min((stat.forca / 255) * 100, 100);
-                const barColor =
-                  STAT_COLORS[stat.nome] || COLORS.defaultStatColor;
+                const isCurrentHighlighted = highlightedStat === stat.nome;
+                
+                // Se for o status sorteado, brilha intensamente, senão fica levemente opaco durante o sorteio
+                const barColor = isCurrentHighlighted 
+                  ? "#00FF66" 
+                  : (highlightedStat ? "#3F3F46" : (STAT_COLORS[stat.nome] || COLORS.defaultStatColor));
+
+                const label =
+                  stat.nome === "hp" ? "HP" :
+                  stat.nome === "attack" ? "ATK" :
+                  stat.nome === "defense" ? "DEF" :
+                  stat.nome === "special-attack" ? "SATK" :
+                  stat.nome === "special-defense" ? "SDEF" : "SPD";
 
                 return (
-                  <View key={stat.nome} style={Styles.statRow}>
+                  <View 
+                    key={stat.nome} 
+                    style={[
+                      Styles.statRow, 
+                      isCurrentHighlighted && { backgroundColor: "rgba(0, 255, 102, 0.1)", borderRadius: 4, paddingHorizontal: 2 }
+                    ]}
+                  >
                     <View style={Styles.statInfo}>
-                      <Text style={Styles.statName}>
-                        {stat.nome === "hp"
-                          ? "HP"
-                          : stat.nome === "attack"
-                            ? "ATK"
-                            : stat.nome === "defense"
-                              ? "DEF"
-                              : stat.nome === "special-attack"
-                                ? "SATK"
-                                : stat.nome === "special-defense"
-                                  ? "SDEF"
-                                  : "SPD"}
+                      <Text style={[Styles.statName, isCurrentHighlighted && { color: "#FFFFFF", fontWeight: "900" }]}>
+                        {label}
                       </Text>
                       <Text style={[Styles.statValue, { color: barColor }]}>
                         {stat.forca}
                       </Text>
                     </View>
-
                     <View style={Styles.progressBarBackground}>
                       <View
                         style={[
@@ -113,10 +102,6 @@ export function PokemonCard({
                           {
                             width: `${percentage}%`,
                             backgroundColor: barColor,
-                            shadowColor: barColor,
-                            shadowOffset: { width: 0, height: 0 },
-                            shadowOpacity: 1,
-                            shadowRadius: 4,
                           },
                         ]}
                       />
@@ -128,20 +113,11 @@ export function PokemonCard({
           )}
         </View>
 
-        {/* COLUNA DA DIREITA: IMAGEM DO POKÉMON */}
-        <View
-          style={[
-            Styles.rightColumn,
-            compact && { height: 60, width: 60, marginTop: 4, flex: 0 },
-          ]}
-        >
-          {pokemon.imagem && (
-            // CORRIGIDO: de styles para Styles com letra maiúscula
-            <Image
-              source={{ uri: pokemon.imagem }}
-              style={Styles.pokemonImage}
-            />
-          )}
+        {/* COLUNA DA DIREITA: IMAGEM */}
+        <View style={[Styles.rightColumn, compact && { width: 56, height: 56 }]}>
+          {pokemon.imagem ? (
+            <Image source={{ uri: pokemon.imagem }} style={compact ? Styles.pokemonImageCompact : Styles.pokemonImage} />
+          ) : null}
         </View>
       </View>
     </TouchableOpacity>

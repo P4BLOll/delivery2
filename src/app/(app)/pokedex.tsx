@@ -6,7 +6,6 @@ import { List } from "@/components/list";
 import { COLORS } from "@/constants/Colors";
 import { Menu } from "@/components/menu";
 
-// IMPORTAÇÕES DOS NOVOS COMPONENTES MULTI-TELA
 import { Header } from "@/components/header";
 import { PokemonCard } from "@/components/pokemonCard";
 
@@ -30,7 +29,7 @@ export default function Pokedex() {
   }, []);
 
   function handleLoadMore() {
-    console.log("Carregar mais pokemons");
+    // Paginação não implementada nesta versão
   }
 
   if (loading) {
@@ -57,7 +56,7 @@ export default function Pokedex() {
         renderItemContent={(pokemon) => (
           <PokemonCard
             pokemon={pokemon}
-            onPress={() => console.log(`Clicou no ${pokemon.nome}`)}
+            onPress={() => {}}
           />
         )}
       />

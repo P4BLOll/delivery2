@@ -1,17 +1,32 @@
-// src/app/(app)/perfil.tsx
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { useAuth } from "@/context/AuthContext";
 import { COLORS } from "@/constants/Colors";
 import { Menu } from "@/components/menu";
 import { Header } from "@/components/header";
-import { getTrainerStats, TrainerStats } from "@/integration/pokemonIntegration";
+import { Input } from "@/components/input";
+import { Button } from "@/components/button";
+import { getTrainerStats, TrainerStats } from "@/integration/authIntegration";
 
 export default function Perfil() {
-  const { user, userId } = useAuth();
+  const { user, userId, updateCredentials } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [stats, setStats] = useState<TrainerStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Campos formulário de edição de credenciais
+  const [newUsername, setNewUsername] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     async function loadStats() {
@@ -19,8 +34,7 @@ export default function Perfil() {
       try {
         const data = await getTrainerStats(userId);
         setStats(data);
-      } catch (err) {
-        console.log("Erro ao carregar os status do treinador", err);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -28,16 +42,65 @@ export default function Perfil() {
     loadStats();
   }, [userId]);
 
+  function handleStartEdit() {
+    setNewUsername(user ?? "");
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setEditing(true);
+  }
+
+  function handleCancelEdit() {
+    setEditing(false);
+  }
+
+  async function handleSaveCredentials() {
+    if (!newUsername.trim()) {
+      Alert.alert("Atenção", "O nome de usuário não pode estar vazio.");
+      return;
+    }
+    if (!currentPassword.trim()) {
+      Alert.alert("Atenção", "Informe a senha atual para confirmar.");
+      return;
+    }
+    if (newPassword && newPassword !== confirmPassword) {
+      Alert.alert("Atenção", "As senhas não coincidem.");
+      return;
+    }
+    if (newPassword && newPassword.length < 6) {
+      Alert.alert("Atenção", "A nova senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    const passwordToUse = newPassword.trim() || currentPassword.trim();
+
+    setSaving(true);
+    try {
+      const success = await updateCredentials(newUsername.trim(), passwordToUse);
+      if (success) {
+        setEditing(false);
+        Alert.alert("Sucesso", "Credenciais atualizadas com sucesso!");
+      } else {
+        Alert.alert("Erro", "Não foi possível atualizar as credenciais.");
+      }
+    } catch {
+      Alert.alert("Erro", "Não foi possível atualizar as credenciais.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <Header title="Perfil do Treinador" onMenuPress={() => setMenuOpen(true)} />
 
       {loading ? (
-        <View style={{ flex: 1, justifyContent: "center" }}>
+        <View style={styles.center}>
           <ActivityIndicator size="large" color="#FF3333" />
         </View>
       ) : (
         <View style={styles.profileContainer}>
+          {/* Avatar */}
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarLargeText}>
               {user ? user.substring(0, 2).toUpperCase() : "TR"}
@@ -47,6 +110,7 @@ export default function Perfil() {
           <Text style={styles.welcomeLabel}>Bem-vindo de volta,</Text>
           <Text style={styles.trainerName}>{user || "Treinador"}</Text>
 
+          {/* Stats — sempre somente leitura */}
           <View style={styles.infoBox}>
             <View style={styles.infoRow}>
               <Text style={styles.infoKey}>Nível do Treinador</Text>
@@ -54,13 +118,86 @@ export default function Perfil() {
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoKey}>Vitórias</Text>
-              <Text style={[styles.infoValue, { color: "#00FF66" }]}>{stats?.vitorias || "0"}</Text>
+              <Text style={[styles.infoValue, { color: "#00FF66" }]}>
+                {stats?.vitorias || "0"}
+              </Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoKey}>Derrotas</Text>
-              <Text style={[styles.infoValue, { color: "#FF3333" }]}>{stats?.derrotas || "0"}</Text>
+              <Text style={[styles.infoValue, { color: "#FF3333" }]}>
+                {stats?.derrotas || "0"}
+              </Text>
             </View>
           </View>
+
+          {editing ? (
+            <View style={styles.editBox}>
+              <Text style={styles.editTitle}>Editar Credenciais</Text>
+
+              <View style={styles.editField}>
+                <Text style={styles.editLabel}>Novo Usuário</Text>
+                <Input
+                  placeholder="Nome de usuário"
+                  value={newUsername}
+                  onChangeText={setNewUsername}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.editField}>
+                <Text style={styles.editLabel}>Senha Atual</Text>
+                <Input
+                  placeholder="Digite sua senha atual"
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.editField}>
+                <Text style={styles.editLabel}>Nova Senha (opcional)</Text>
+                <Input
+                  placeholder="Deixe em branco para manter a atual"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.editField}>
+                <Text style={styles.editLabel}>Confirmar Nova Senha</Text>
+                <Input
+                  placeholder="Repita a nova senha"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.editActions}>
+                <Button
+                  title="Salvar"
+                  onPress={handleSaveCredentials}
+                  isLoading={saving}
+                  style={styles.saveButton}
+                />
+                <Button
+                  title="Cancelar"
+                  onPress={handleCancelEdit}
+                  style={styles.cancelButton}
+                />
+              </View>
+            </View>
+          ) : (
+            <Button
+              title="Editar Credenciais"
+              onPress={handleStartEdit}
+              style={styles.editButton}
+            />
+          )}
         </View>
       )}
 
@@ -69,18 +206,22 @@ export default function Perfil() {
   );
 }
 
-// ... manter estilos originais de styles abaixo
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   profileContainer: {
     flex: 1,
     alignItems: "center",
     paddingTop: 40,
     paddingHorizontal: 24,
+    gap: 16,
   },
   avatarContainer: {
     width: 120,
@@ -89,7 +230,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#1A1A1E",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 24,
     shadowColor: "#FF3333",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
@@ -105,13 +245,14 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 14,
     fontWeight: "500",
+    marginTop: -8,
   },
   trainerName: {
     color: COLORS.text,
     fontSize: 28,
     fontWeight: "bold",
     textTransform: "capitalize",
-    marginBottom: 32,
+    marginTop: -8,
   },
   infoBox: {
     width: "100%",
@@ -134,5 +275,42 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 14,
     fontWeight: "bold",
+  },
+  editButton: {
+    width: "100%",
+    backgroundColor: "#FF3333",
+    shadowColor: "#FF3333",
+  },
+  editBox: {
+    width: "100%",
+    backgroundColor: "#1A1A1E",
+    borderRadius: 12,
+    padding: 20,
+    gap: 14,
+  },
+  editTitle: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  editField: {
+    gap: 6,
+  },
+  editLabel: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  editActions: {
+    gap: 10,
+    marginTop: 4,
+  },
+  saveButton: {
+    backgroundColor: "#16A34A",
+    shadowColor: "#16A34A",
+  },
+  cancelButton: {
+    backgroundColor: "#3F3F46",
+    shadowColor: "transparent",
   },
 });
