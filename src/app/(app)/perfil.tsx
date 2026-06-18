@@ -4,14 +4,11 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { useAuth } from "@/context/AuthContext";
 import { COLORS } from "@/constants/Colors";
 import { Menu } from "@/components/menu";
 import { Header } from "@/components/header";
-import { Input } from "@/components/input";
-import { Button } from "@/components/button";
 import { getTrainerStats, TrainerStats } from "@/integration/authIntegration";
 
 export default function Perfil() {
@@ -19,14 +16,6 @@ export default function Perfil() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [stats, setStats] = useState<TrainerStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  // Campos formulário de edição de credenciais
-  const [newUsername, setNewUsername] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     async function loadStats() {
@@ -41,18 +30,6 @@ export default function Perfil() {
     }
     loadStats();
   }, [userId]);
-
-  function handleStartEdit() {
-    setNewUsername(user ?? "");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setEditing(true);
-  }
-
-  function handleCancelEdit() {
-    setEditing(false);
-  }
 
 
   return (
@@ -171,42 +148,5 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 14,
     fontWeight: "bold",
-  },
-  editButton: {
-    width: "100%",
-    backgroundColor: "#FF3333",
-    shadowColor: "#FF3333",
-  },
-  editBox: {
-    width: "100%",
-    backgroundColor: "#1A1A1E",
-    borderRadius: 12,
-    padding: 20,
-    gap: 14,
-  },
-  editTitle: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  editField: {
-    gap: 6,
-  },
-  editLabel: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  editActions: {
-    gap: 10,
-    marginTop: 4,
-  },
-  saveButton: {
-    backgroundColor: "#16A34A",
-    shadowColor: "#16A34A",
-  },
-  cancelButton: {
-    backgroundColor: "#3F3F46",
-    shadowColor: "transparent",
   },
 });

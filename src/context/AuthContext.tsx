@@ -1,8 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { login, register } from "@/integration/authIntegration";
-import { getPokemonById, updateBackendTeam, addCapturedPokemon } from "@/integration/pokemonIntegration";
-import { Pokemon } from "@/@types/pokemon";
 
 type AuthContextData = {
   isAuthenticated: boolean;
@@ -58,39 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   async function signUp(username: string, password: string): Promise<boolean> {
     try {
-      // 1. Cria a conta no backend
       await register(username, password);
-
-      // 2. Faz o login imediato em background para capturar o ID do novo usuário
-      const loginData = await login(username, password);
-      const generatedId = loginData.id ?? loginData.userId ?? "";
-
-      if (generatedId) {
-        const autoTeam: Pokemon[] = [];
-
-        // Gera 5 Pokémon iniciais sem repetição
-        while (autoTeam.length < 5) {
-          const randomId = Math.floor(Math.random() * 151) + 1; // Sorteia da geração clássica para balanceamento inicial
-          try {
-            const pokemon = await getPokemonById(randomId);
-            if (!autoTeam.some((p) => p.index === pokemon.index)) {
-              autoTeam.push(pokemon);
-            }
-          } catch (e) {
-            // Ignora falhas da API externa e continua tentando
-          }
-        }
-
-        // 3. Salva no banco de dados e localmente no AsyncStorage
-        for (const pokemon of autoTeam) {
-          await addCapturedPokemon(generatedId, pokemon.index).catch(() => {});
-          await updateBackendTeam(generatedId, "0", pokemon.index).catch(() => {});
-        }
-
-        await AsyncStorage.setItem("@PokeApp:team", JSON.stringify(autoTeam));
-        await AsyncStorage.setItem("@PokeApp:bench", JSON.stringify([]));
-      }
-
       return true;
     } catch {
       return false;
@@ -101,12 +67,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     setUserId(null);
     setIsAuthenticated(false);
-    await AsyncStorage.multiRemove([
-      "@Auth:user",
-      "@Auth:userId",
-      "@PokeApp:team",
-      "@PokeApp:bench"
-    ]);
+    // Remove apenas credenciais de sessão — o time persiste no backend
+    await AsyncStorage.multiRemove(["@Auth:user", "@Auth:userId"]);
   }
 
   return (

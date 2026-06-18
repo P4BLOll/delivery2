@@ -6,6 +6,8 @@ const POKEAPI_URL = axios.create({
   baseURL: "https://pokeapi.co/api/v2",
 });
 
+const MAX_BACKEND_TEAM_SIZE = 5;
+
 // Busca a lista completa de pokémons da PokéAPI.
 export const getPokemon = async (limit = 1025): Promise<Pokemon[]> => {
   const response = await POKEAPI_URL.get(`/pokemon?limit=${limit}`);
@@ -35,50 +37,95 @@ const mapPokemon = (data: any): Pokemon => ({
   })),
 });
 
+// Mapeia o objeto retornado pelo backend para o tipo Pokemon do app
+const mapBackendPokemon = (data: any): Pokemon | null => {
+  if (!data) return null;
+  return {
+    index: String(data.index ?? data.id ?? ""),
+    nome: data.name ?? data.nome ?? "",
+    imagem: data.image ?? data.imagem ?? data.sprites?.front_default ?? "",
+    tipos: Array.isArray(data.types)
+      ? data.types.map((t: any) => (typeof t === "string" ? t : t.type?.name ?? t.name ?? t))
+      : Array.isArray(data.tipos)
+      ? data.tipos
+      : [],
+    poderes: Array.isArray(data.abilities)
+      ? data.abilities.map((a: any) => ({ nome: a.name ?? a.nome ?? "", forca: a.strength ?? a.forca ?? 0 }))
+      : Array.isArray(data.poderes)
+      ? data.poderes
+      : [],
+  };
+};
+
+// Busca o time e capturados em uma única chamada ao backend
+export const getTeamAndCaptured = async (
+  userId: string
+): Promise<{ team: (Pokemon | null)[]; captured: Pokemon[] }> => {
+  const response = await API_BACKEND.get(`/pokemon/v1/team`, {
+    params: { "user-id": userId },
+  });
+
+  const raw = response.data;
+
+  const teamList: any[] = Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw?.team)
+    ? raw.team
+    : Array.isArray(raw?.pokemons)
+    ? raw.pokemons
+    : [];
+
+  const capturedList: any[] = Array.isArray(raw?.capture)
+    ? raw.capture
+    : Array.isArray(raw?.captured)
+    ? raw.captured
+    : [];
+
+  const team = Array(MAX_BACKEND_TEAM_SIZE)
+    .fill(null)
+    .map((_, i) => mapBackendPokemon(teamList[i] ?? null));
+
+  const captured = capturedList
+    .map(mapBackendPokemon)
+    .filter((p): p is Pokemon => p !== null && p.index !== "");
+
+  return { team, captured };
+};
+
 // retorna o time do treinador 
 export const getBackendTeam = async (
   userId: string
 ): Promise<(Pokemon | null)[]> => {
+  const { team } = await getTeamAndCaptured(userId);
+  return team;
+};
+
+// Retorna os pokémons capturados (adquiridos) do treinador que não estão no time
+export const getCapturedPokemons = async (userId: string): Promise<Pokemon[]> => {
   try {
-    const response = await API_BACKEND.get(`/pokemon/v1/team`, {
-      params: { "user-id": userId },
-    });
-    const pokemonList = response.data.pokemons || response.data || [];
-
-    const teamPromises = Array(6)
-      .fill(null)
-      .map(async (_, index) => {
-        const pokeData = pokemonList[index];
-        if (!pokeData) return null;
-
-        const id = pokeData.id || pokeData.pokemonId || pokeData;
-        return id ? await getPokemonById(id) : null;
-      });
-
-    return await Promise.all(teamPromises);
+    const { captured } = await getTeamAndCaptured(userId);
+    return captured;
   } catch {
-    return Array(6).fill(null);
+    return [];
   }
 };
 
-// Atualiza o time
+// Atualiza o time via swap: troca removedPokemon por newPokemon.
+// O backend espera o user-id como query param e os pokémons no corpo
+// da requisição (TeamUpdateRequest). Enviar como query params resulta
+// em 400 "Required request body is missing".
 export const updateBackendTeam = async (
   userId: string,
-  removedPokemonId: string | number,
-  newPokemonId: string | number
+  removedPokemon: string,
+  newPokemon: string
 ): Promise<void> => {
-  const removed =
-    removedPokemonId === "0" || removedPokemonId === 0 ? "" : removedPokemonId;
-  const added =
-    newPokemonId === "0" || newPokemonId === 0 ? "" : newPokemonId;
-
-  await API_BACKEND.put(`/pokemon/v1/team`, null, {
-    params: {
-      "user-id": userId,
-      "removed-pokemon": removed,
-      "new-pokemon": added,
+  await API_BACKEND.put(
+    `/pokemon/v1/team`,
+    { removedPokemon, newPokemon },
+    {
+      params: { "user-id": userId },
     },
-  });
+  );
 };
 
 // Adiciona um pokémon capturado
