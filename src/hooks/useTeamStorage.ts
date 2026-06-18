@@ -41,7 +41,6 @@ export const saveTeamToStorage = async (
   ]).catch(() => {});
 };
 
-// persistencia
 export function useTeamStorage() {
   const persist = useCallback(
     (team: (Pokemon | null)[], bench: Pokemon[]) =>

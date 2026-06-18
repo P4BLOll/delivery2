@@ -15,7 +15,7 @@ import { Button } from "@/components/button";
 import { getTrainerStats, TrainerStats } from "@/integration/authIntegration";
 
 export default function Perfil() {
-  const { user, userId, updateCredentials } = useAuth();
+  const { user, userId } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [stats, setStats] = useState<TrainerStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,41 +54,6 @@ export default function Perfil() {
     setEditing(false);
   }
 
-  async function handleSaveCredentials() {
-    if (!newUsername.trim()) {
-      Alert.alert("Atenção", "O nome de usuário não pode estar vazio.");
-      return;
-    }
-    if (!currentPassword.trim()) {
-      Alert.alert("Atenção", "Informe a senha atual para confirmar.");
-      return;
-    }
-    if (newPassword && newPassword !== confirmPassword) {
-      Alert.alert("Atenção", "As senhas não coincidem.");
-      return;
-    }
-    if (newPassword && newPassword.length < 6) {
-      Alert.alert("Atenção", "A nova senha deve ter pelo menos 6 caracteres.");
-      return;
-    }
-
-    const passwordToUse = newPassword.trim() || currentPassword.trim();
-
-    setSaving(true);
-    try {
-      const success = await updateCredentials(newUsername.trim(), passwordToUse);
-      if (success) {
-        setEditing(false);
-        Alert.alert("Sucesso", "Credenciais atualizadas com sucesso!");
-      } else {
-        Alert.alert("Erro", "Não foi possível atualizar as credenciais.");
-      }
-    } catch {
-      Alert.alert("Erro", "Não foi possível atualizar as credenciais.");
-    } finally {
-      setSaving(false);
-    }
-  }
 
   return (
     <View style={styles.container}>
@@ -129,75 +94,6 @@ export default function Perfil() {
               </Text>
             </View>
           </View>
-
-          {editing ? (
-            <View style={styles.editBox}>
-              <Text style={styles.editTitle}>Editar Credenciais</Text>
-
-              <View style={styles.editField}>
-                <Text style={styles.editLabel}>Novo Usuário</Text>
-                <Input
-                  placeholder="Nome de usuário"
-                  value={newUsername}
-                  onChangeText={setNewUsername}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.editField}>
-                <Text style={styles.editLabel}>Senha Atual</Text>
-                <Input
-                  placeholder="Digite sua senha atual"
-                  value={currentPassword}
-                  onChangeText={setCurrentPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.editField}>
-                <Text style={styles.editLabel}>Nova Senha (opcional)</Text>
-                <Input
-                  placeholder="Deixe em branco para manter a atual"
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.editField}>
-                <Text style={styles.editLabel}>Confirmar Nova Senha</Text>
-                <Input
-                  placeholder="Repita a nova senha"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.editActions}>
-                <Button
-                  title="Salvar"
-                  onPress={handleSaveCredentials}
-                  isLoading={saving}
-                  style={styles.saveButton}
-                />
-                <Button
-                  title="Cancelar"
-                  onPress={handleCancelEdit}
-                  style={styles.cancelButton}
-                />
-              </View>
-            </View>
-          ) : (
-            <Button
-              title="Editar Credenciais"
-              onPress={handleStartEdit}
-              style={styles.editButton}
-            />
-          )}
         </View>
       )}
 

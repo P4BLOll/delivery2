@@ -36,14 +36,6 @@ export const login = async (
   return response.data;
 };
 
-// edit perfil
-export const updateCredentials = async (
-  username: string,
-  password: string
-): Promise<void> => {
-  await API_BACKEND.post("/auth/v1/register", { username, password });
-};
-
 // get estatisticas perfil
 export const getTrainerStats = async (userId: string): Promise<TrainerStats> => {
   const response = await API_BACKEND.get<TrainerStats>(

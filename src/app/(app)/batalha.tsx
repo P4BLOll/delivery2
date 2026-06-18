@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/context/AuthContext";
-import { useTeamStorage, loadTeamFromStorage } from "@/hooks/useTeamStorage";
-import { getPokemonById } from "@/integration/pokemonIntegration";
+import { getPokemonById, updateBackendTeam, addCapturedPokemon } from "@/integration/pokemonIntegration";
 import { updateTrainerStats, getTrainerStats } from "@/integration/authIntegration";
 import { Pokemon, Poder } from "@/@types/pokemon";
 import { COLORS } from "@/constants/Colors";
@@ -12,7 +12,7 @@ import { Button } from "@/components/button";
 import { PokemonCard } from "@/components/pokemonCard";
 
 const MAX_TEAM_SIZE = 5;
-const ENEMY_IDS = [25, 6, 150, 448, 94]; 
+const ENEMY_IDS = [25, 6, 150, 448, 94];
 
 interface RoundResult {
   playerPoke: Pokemon | null;
@@ -27,7 +27,6 @@ export default function Batalha() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [battling, setBattling] = useState(false);
-  
   const [playerTeam, setPlayerTeam] = useState<(Pokemon | null)[]>(Array(MAX_TEAM_SIZE).fill(null));
   const [enemyTeam, setEnemyTeam] = useState<Pokemon[]>([]);
   const [results, setResults] = useState<RoundResult[]>([]);
@@ -39,8 +38,12 @@ export default function Batalha() {
       if (!userId) return;
       setLoading(true);
       try {
-        const cached = await loadTeamFromStorage(MAX_TEAM_SIZE);
-        if (cached) setPlayerTeam(cached.team);
+        const rawTeam = await AsyncStorage.getItem("@PokeApp:team");
+        if (rawTeam) {
+          const parsedTeam = JSON.parse(rawTeam);
+          const normalized = Array(MAX_TEAM_SIZE).fill(null).map((_, i) => parsedTeam[i] ?? null);
+          setPlayerTeam(normalized);
+        }
 
         const enemyPromises = ENEMY_IDS.map(id => getPokemonById(id));
         const enemies = await Promise.all(enemyPromises);
@@ -60,24 +63,19 @@ export default function Batalha() {
       Alert.alert("Time incompleto", "Você precisa de pelo menos 3 Pokémon principais para batalhar!");
       return;
     }
-
     setBattling(true);
     setBattleOutcome(null);
     setResults([]);
-
-    const animationDuration = 2000; 
-    const intervalSpeed = 120; 
+    const animationDuration = 2000;
+    const intervalSpeed = 120;
 
     const intervalId = setInterval(() => {
       const currentAnimState: typeof animatingStats = {};
-      
       for (let i = 0; i < MAX_TEAM_SIZE; i++) {
         const pPoke = playerTeam[i];
         const ePoke = enemyTeam[i];
-
         const randomPlayerStatName = pPoke?.poderes[Math.floor(Math.random() * pPoke.poderes.length)]?.nome || null;
         const randomEnemyStatName = ePoke.poderes[Math.floor(Math.random() * ePoke.poderes.length)].nome;
-
         currentAnimState[i] = {
           player: randomPlayerStatName,
           enemy: randomEnemyStatName,
@@ -88,7 +86,6 @@ export default function Batalha() {
 
     setTimeout(async () => {
       clearInterval(intervalId);
-
       const roundResults: RoundResult[] = [];
       const finalAnimState: typeof animatingStats = {};
       let playerWins = 0;
@@ -97,10 +94,8 @@ export default function Batalha() {
       for (let i = 0; i < MAX_TEAM_SIZE; i++) {
         const pPoke = playerTeam[i];
         const ePoke = enemyTeam[i];
-
         const pStat = pPoke ? pPoke.poderes[Math.floor(Math.random() * pPoke.poderes.length)] : null;
         const eStat = ePoke.poderes[Math.floor(Math.random() * ePoke.poderes.length)];
-
         const pPower = pStat ? pStat.forca : 0;
         const ePower = eStat.forca;
 
@@ -128,7 +123,7 @@ export default function Batalha() {
       }
 
       setAnimatingStats(finalAnimState);
-      const finalOutcome = playerWins >= 3 ? "Ganhou" : "Perdeu";
+      const finalOutcome = playerWins > enemyWins ? "Ganhou" : "Perdeu";
       setResults(roundResults);
       setBattleOutcome(finalOutcome);
 
@@ -143,7 +138,26 @@ export default function Batalha() {
             vitorias: vitoriasAtualizadas,
             derrotas: derrotasAtualizadas,
           });
-        } catch {
+
+          if (finalOutcome === "Ganhou") {
+            try {
+              const randomRewardId = Math.floor(Math.random() * 1025) + 1;
+              const newPokemon = await getPokemonById(randomRewardId);
+              
+              await addCapturedPokemon(userId, newPokemon.index).catch(() => {});
+              
+              const rawWon = await AsyncStorage.getItem("@PokeApp:won");
+              const currentWon: Pokemon[] = rawWon ? JSON.parse(rawWon) : [];
+              
+              if (!currentWon.some(p => p.index === newPokemon.index)) {
+                currentWon.push(newPokemon);
+                await AsyncStorage.setItem("@PokeApp:won", JSON.stringify(currentWon));
+              }
+            } catch (apiError) {
+              console.log("Erro ao gerar recompensa em background:", apiError);
+            }
+          }
+        } catch (error) {
           console.log("Erro ao salvar status pós-batalha.");
         }
       }
@@ -172,7 +186,6 @@ export default function Batalha() {
   return (
     <View style={styles.container}>
       <Header title="Arena de Batalha" onMenuPress={() => setMenuOpen(true)} />
-
       {battleOutcome ? (
         <View style={styles.outcomeContainer}>
           <Text style={[styles.outcomeTitle, battleOutcome === "Ganhou" ? styles.winText : styles.lossText]}>
@@ -185,23 +198,20 @@ export default function Batalha() {
           <Button title="Iniciar Batalha" onPress={handleStartBattle} isLoading={battling} style={styles.actionBtn} />
         </View>
       )}
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.columnsContainer}>
-          
           <View style={styles.column}>
             <Text style={styles.columnTitle}>Meu Time</Text>
             {playerTeam.map((playerPoke, index) => {
               const round = results[index];
               const currentAnimation = animatingStats[index];
-
               return (
                 <View key={`player-${index}`} style={styles.battleCardWrapper}>
                   <Text style={styles.roundLabel}>ROUND {index + 1}</Text>
                   {playerPoke ? (
                     <PokemonCard 
-                      pokemon={playerPoke} 
-                      compact={false} 
+                      pokemon={playerPoke}
+                      compact={false}
                       highlightedStat={currentAnimation?.player}
                     />
                   ) : (
@@ -213,7 +223,7 @@ export default function Batalha() {
                         Sorteado: <Text style={styles.statHighlight}>{formatStatName(round.playerStat.nome)}</Text> ({round.playerStat.forca})
                       </Text>
                       <Text style={[styles.resultText, round.winner === "player" ? styles.winText : round.winner === "enemy" ? styles.lossText : styles.drawText]}>
-                        {round.winner === "player" ? "✓ Ganhou" : round.winner === "enemy" ? "✕ Perdeu" : "Empate"}
+                        {round.winner === "player" ? "Ganhou" : round.winner === "enemy" ? "Perdeu" : "Empate"}
                       </Text>
                     </View>
                   )}
@@ -221,19 +231,17 @@ export default function Batalha() {
               );
             })}
           </View>
-
           <View style={styles.column}>
             <Text style={[styles.columnTitle, { color: "#FF3333" }]}>Time Inimigo</Text>
             {enemyTeam.map((enemyPoke, index) => {
               const round = results[index];
               const currentAnimation = animatingStats[index];
-
               return (
                 <View key={`enemy-${index}`} style={styles.battleCardWrapper}>
                   <Text style={styles.roundLabel}>ROUND {index + 1}</Text>
                   <PokemonCard 
-                    pokemon={enemyPoke} 
-                    compact={false} 
+                    pokemon={enemyPoke}
+                    compact={false}
                     highlightedStat={currentAnimation?.enemy}
                   />
                   {round && (
@@ -242,7 +250,7 @@ export default function Batalha() {
                         Sorteado: <Text style={styles.statHighlight}>{formatStatName(round.enemyStat.nome)}</Text> ({round.enemyStat.forca})
                       </Text>
                       <Text style={[styles.resultText, round.winner === "enemy" ? styles.winText : round.winner === "player" ? styles.lossText : styles.drawText]}>
-                        {round.winner === "enemy" ? "✓ Ganhou" : round.winner === "player" ? "✕ Perdeu" : "Empate"}
+                        {round.winner === "enemy" ? "Ganhou" : round.winner === "player" ? "Perdeu" : "Empate"}
                       </Text>
                     </View>
                   )}
@@ -250,10 +258,8 @@ export default function Batalha() {
               );
             })}
           </View>
-
         </View>
       </ScrollView>
-
       <Menu visible={menuOpen} onClose={() => setMenuOpen(false)} />
     </View>
   );
@@ -265,7 +271,6 @@ const styles = StyleSheet.create({
   actionRow: { padding: 16, alignItems: 'center' },
   actionBtn: { maxWidth: 400 }, 
   scrollContent: { paddingBottom: 42 },
-  
   columnsContainer: {
     flexDirection: "row",
     paddingHorizontal: 16,
