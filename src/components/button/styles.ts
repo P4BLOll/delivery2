@@ -2,9 +2,9 @@ import { StyleSheet } from "react-native";
 
 export const Styles = StyleSheet.create({
     button: {
-        width: "100%", // Ajustado para 100% para ser flexível em qualquer container do app
+        width: "100%",
         height: 52,
-        backgroundColor: "#FF3333", // Vermelho Pokebola vibrante temático
+        backgroundColor: "#FF3333",
         borderRadius: 12,
         justifyContent: "center",
         alignItems: "center",
@@ -23,7 +23,7 @@ export const Styles = StyleSheet.create({
     },
     disabled: {
         opacity: 0.5,
-        backgroundColor: "#4E4E5A", // Cor cinza desabilitada para o botão
+        backgroundColor: "#4E4E5A",
         shadowOpacity: 0,
         elevation: 0,
     }

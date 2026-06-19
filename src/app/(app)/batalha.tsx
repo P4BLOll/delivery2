@@ -21,7 +21,6 @@ interface RoundResult {
   enemyStat: Poder;
 }
 
-// Calcula luminância relativa (WCAG 2.1) para decidir texto preto ou branco no botão preenchido
 function getLuminance(hex: string): number {
   const h = hex.replace("#", "");
   const r = parseInt(h.substring(0, 2), 16) / 255;
@@ -39,7 +38,6 @@ interface RewardModalProps {
 function RewardModal({ pokemon, onClose }: RewardModalProps) {
   const fillAnim = useRef(new Animated.Value(0)).current;
 
-  // Reseta o hover sempre que o modal abre com um novo pokémon
   useEffect(() => {
     if (pokemon) {
       fillAnim.setValue(0);
@@ -138,7 +136,6 @@ export default function Batalha() {
   const [battling, setBattling] = useState(false);
   const [playerTeam, setPlayerTeam] = useState<(Pokemon | null)[]>(Array(MAX_TEAM_SIZE).fill(null));
   const [enemyTeam, setEnemyTeam] = useState<Pokemon[]>([]);
-  // Conta nova ainda não sorteou: não há time para batalhar até sortear em /meutime.
   const [needsSorteio, setNeedsSorteio] = useState(false);
   const [results, setResults] = useState<RoundResult[]>([]);
   const [battleOutcome, setBattleOutcome] = useState<"Ganhou" | "Perdeu" | null>(null);
@@ -155,9 +152,7 @@ export default function Batalha() {
           Promise.all(ENEMY_IDS.map(id => getPokemonById(id))),
           getTrainerStats(userId),
         ]);
-        // Enquanto a conta não sorteou (level < SORTEADO_LEVEL), o time é tratado
-        // como vazio aqui também — o time pré-populado do backend só passa a
-        // valer depois do sorteio em /meutime. Estado vem do backend (cross-device).
+        
         const sorteado = hasSorteado(stats?.level);
         const normalized = sorteado
           ? Array(MAX_TEAM_SIZE).fill(null).map((_, i) => backendTeam[i] ?? null)

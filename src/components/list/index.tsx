@@ -19,8 +19,8 @@ export function List({
     <FlatList
       data={data}
       keyExtractor={(item) => String(item.id ?? item.index)}
-      numColumns={3} // Força a exibição em 3 colunas
-      columnWrapperStyle={styles.columnWrapper} // Controla o espaçamento da linha
+      numColumns={3}
+      columnWrapperStyle={styles.columnWrapper}
       renderItem={({ item }) => (
         <View style={[styles.pokedexCard, cardStyle?.(item)]}>
           {renderItemContent(item)}

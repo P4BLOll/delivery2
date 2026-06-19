@@ -5,7 +5,6 @@ import { Styles } from "./styles";
 const BALL_SIZE = 36;
 const DURATION = 500;
 
-// Renderiza uma pokeball nativa com animação de pulso
 function PulseBall({ delay }: { delay: number }) {
   const opacity = useRef(new Animated.Value(0.2)).current;
 
@@ -49,7 +48,6 @@ function PulseBall({ delay }: { delay: number }) {
           elevation: 4,
         }}
       >
-        {/* Linha central */}
         <View
           style={{
             position: "absolute",
@@ -58,7 +56,6 @@ function PulseBall({ delay }: { delay: number }) {
             backgroundColor: "#FF3333",
           }}
         />
-        {/* Círculo central */}
         <View
           style={{
             width: 10,

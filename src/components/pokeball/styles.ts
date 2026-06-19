@@ -8,11 +8,9 @@ export const Styles = StyleSheet.create({
         position: "relative",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "transparent", // Remove totalmente o fundo sólido
+        backgroundColor: "transparent",
         borderWidth: 2,
-        borderColor: "#FF3333", // Borda neon vermelha
-
-        // Efeito de brilho neon para iOS e Android
+        borderColor: "#FF3333", 
         shadowColor: "#FF3333",
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.7,
@@ -29,7 +27,7 @@ export const Styles = StyleSheet.create({
         width: 12,
         height: 12,
         borderRadius: 6,
-        backgroundColor: "#0A0A0C", // Mascara a linha central usando a cor de fundo oficial do app
+        backgroundColor: "#0A0A0C", 
         borderWidth: 2,
         borderColor: "#FF3333",
         justifyContent: "center",
@@ -48,7 +46,7 @@ export const Styles = StyleSheet.create({
         height: 42,
         borderRadius: 21,
         borderWidth: 2,
-        borderColor: "#00FF66", // Brilho de captura bem-sucedida em verde neon
+        borderColor: "#00FF66",
         opacity: 0,
         shadowColor: "#00FF66",
         shadowOffset: { width: 0, height: 0 },

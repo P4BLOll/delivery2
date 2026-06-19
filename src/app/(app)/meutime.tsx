@@ -39,15 +39,12 @@ export default function MeuTime() {
   const [loading, setLoading] = useState(true);
   const [sortearing, setSortearing] = useState(false);
   const [swapping, setSwapping] = useState(false);
-  // Se true, o usuário ainda não sorteou: exibe tela vazia + botão
   const [needsSorteio, setNeedsSorteio] = useState(false);
   const [team, setTeam] = useState<(Pokemon | null)[]>(
     Array(MAX_TEAM_SIZE).fill(null),
   );
   const [wonPokemons, setWonPokemons] = useState<Pokemon[]>([]);
   const [selected, setSelected] = useState<Selection | null>(null);
-
-  // Token de fetch para descartar respostas obsoletas
   const fetchTokenRef = useRef(0);
 
   const loadFromBackend = useCallback(async (showSpinner = true) => {
@@ -65,10 +62,6 @@ export default function MeuTime() {
         .map((_, i) => backendTeam[i] ?? null);
       setTeam(normalizedTeam);
       setWonPokemons(captured);
-      // Estado vem exclusivamente do backend (fonte única de verdade):
-      // enquanto o nível indicar conta nova (level 1), exibe a tela vazia com
-      // o botão de sorteio; a partir do sorteio (level >= 2), exibe o time
-      // persistido — igual em qualquer dispositivo, aba anônima ou refresh.
       const alreadySorteado = hasSorteado(stats?.level);
       setNeedsSorteio(!alreadySorteado || normalizedTeam.every((p) => p === null));
     } catch {
@@ -83,7 +76,6 @@ export default function MeuTime() {
     }
   }, [userId]);
 
-  // Na montagem: carrega o time sempre do backend (fonte única de verdade)
   useEffect(() => {
     loadFromBackend(true);
   }, [loadFromBackend]);
@@ -161,37 +153,18 @@ export default function MeuTime() {
     );
   };
 
-  /**
-   * Sorteia 5 pokémons aleatórios da PokéAPI e os coloca na Equipe Principal.
-   *
-   * O backend exige que o newPokemon esteja em captured antes do swap, e o
-   * swap sempre move o removedPokemon para captured. Para manter os adquiridos
-   * limpos, após cada swap deletamos imediatamente o pokémon deslocado.
-   *
-   * Fluxo:
-   *   1. Busca o time atual do backend (5 slots já populados pelo registro)
-   *   2. Sorteia 5 IDs únicos sem conflito com os existentes
-   *   3. Para cada slot i:
-   *      a. Adiciona newPokemon[i] como captured
-   *      b. Faz swap(team[i] → newPokemon[i])  — team[i] vai para captured
-   *      c. Deleta team[i] de captured          — adquiridos ficam limpos
-   *   4. Atualiza a UI e recarrega do backend
-   */
   const handleSortearTime = async () => {
     if (!userId) return;
     setSortearing(true);
     try {
-      // 1. Time atual do backend
       const { team: backendTeam } = await getTeamAndCaptured(userId);
       const currentTeam = backendTeam
         .filter((p): p is Pokemon => p !== null)
         .slice(0, MAX_TEAM_SIZE);
-
       const usedIds = new Set(currentTeam.map((p) => p.index));
-
-      // 2. Sorteia 5 IDs únicos sem conflito
       const available = Array.from({ length: POKEDEX_SIZE }, (_, i) => i + 1)
         .filter((id) => !usedIds.has(String(id)));
+
       for (let i = available.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [available[i], available[j]] = [available[j], available[i]];
@@ -203,25 +176,16 @@ export default function MeuTime() {
         return;
       }
 
-      // 3. Para cada slot: add captured → swap → delete displaced
       const newPokemons: Pokemon[] = [];
       for (let i = 0; i < currentTeam.length; i++) {
         const pokemon = await getPokemonById(newIds[i]);
         newPokemons.push(pokemon);
 
-        // a. Coloca o novo em captured (requisito do backend para o swap)
         await addCapturedPokemon(userId, pokemon.index);
-
-        // b. Swap: o slot do time recebe o novo, o antigo vai para captured
         await updateBackendTeam(userId, currentTeam[i].index, pokemon.index);
-
-        // c. Remove o antigo de captured — mantém adquiridos limpos
         await deleteCapturedPokemon(userId, currentTeam[i].index);
       }
 
-      // 4. Marca no backend que o time já foi configurado e atualiza a UI.
-      //    O nível do treinador passa a >= SORTEADO_LEVEL, sinalizando em
-      //    qualquer dispositivo que a conta já sorteou (preserva vitórias/derrotas).
       const currentStats = await getTrainerStats(userId);
       await updateTrainerStats(userId, {
         level: String(Math.max(SORTEADO_LEVEL, Number(currentStats.level) || 1)),
@@ -281,12 +245,10 @@ export default function MeuTime() {
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* ── EQUIPE PRINCIPAL ── */}
         <View style={styles.teamSection}>
           <Text style={styles.sectionTitle}>Equipe Principal</Text>
 
           {needsSorteio ? (
-            // Conta nova: exibe slots vazios + botão de sorteio
             <View>
               <View style={styles.row}>
                 <View style={styles.slotWrapper}><View style={styles.emptySlot}><Text style={styles.emptySlotText}>Vazio</Text></View></View>
@@ -351,7 +313,6 @@ export default function MeuTime() {
           )}
         </View>
 
-        {/* ── POKÉMON ADQUIRIDOS ── */}
         {!needsSorteio && (
           <>
             <View style={styles.benchHeader}>

@@ -33,16 +33,12 @@ export function Menu({ visible, onClose }: MenuProps) {
       onRequestClose={onClose}
     >
       <View style={Styles.overlay}>
-        {/* Área transparente atrás do card — fecha ao tocar */}
         <TouchableOpacity
           style={Styles.clickableOverlay}
           onPress={onClose}
           activeOpacity={1}
         />
-
-        {/* Card central */}
         <View style={Styles.menuContainer}>
-          {/* Header: Dados do Treinador */}
           <View style={Styles.header}>
             <View style={Styles.avatar}>
               <Text style={Styles.avatarText}>
@@ -54,8 +50,6 @@ export function Menu({ visible, onClose }: MenuProps) {
               <Text style={Styles.username}>{user || "Admin"}</Text>
             </View>
           </View>
-
-          {/* Links de Navegação Uniformes com Ícones Temáticos */}
           <View style={Styles.navLinks}>
             <TouchableOpacity
               style={Styles.linkItem}
@@ -100,13 +94,11 @@ export function Menu({ visible, onClose }: MenuProps) {
               <MaterialCommunityIcons
                 name="sword"
                 size={22}
-              color="#FF8BE6" // Cor customizada ou vinda de suas constantes
+              color="#FF8BE6" 
             />
             <Text style={Styles.linkText}>Arena de Batalha</Text>
           </TouchableOpacity>
           </View>
-
-          {/* CORRIGIDO: Agora consome o componente unificado Button */}
           <Button
             title="Sair do Aplicativo"
             onPress={handleLogout}

@@ -9,7 +9,7 @@ interface PokemonCardProps {
   onPress?: () => void;
   onLongPress?: () => void;
   compact?: boolean;
-  highlightedStat?: string | null; // Nova prop para a animação de sorteio
+  highlightedStat?: string | null;
 }
 
 export function PokemonCard({
@@ -22,7 +22,6 @@ export function PokemonCard({
   const primaryType = pokemon.tipos[0];
   const neonColor = TYPE_COLORS[primaryType] || COLORS.defaultCardBorder;
 
-  // Condição para mostrar os status: ou não é compacto, ou tem um status em destaque/sorteio rolando
   const showStats = !compact || highlightedStat !== null;
 
   return (
@@ -37,9 +36,7 @@ export function PokemonCard({
       activeOpacity={0.7}
     >
       <View style={Styles.cardContent}>
-        {/* COLUNA DA ESQUERDA: ID, NOME, TIPOS E STATS */}
         <View style={Styles.leftColumn}>
-          {/* HEADER */}
           <View style={Styles.cardHeader}>
             <Text style={Styles.pokemonId}>#{pokemon.index}</Text>
             <Text style={Styles.pokemonName} numberOfLines={1}>
@@ -59,15 +56,13 @@ export function PokemonCard({
               })}
             </View>
           </View>
-          
-          {/* STATS */}
+
           {showStats && (
             <View style={Styles.statsContainer}>
               {pokemon.poderes.map((stat: Poder) => {
                 const percentage = Math.min((stat.forca / 255) * 100, 100);
                 const isCurrentHighlighted = highlightedStat === stat.nome;
                 
-                // Se for o status sorteado, brilha intensamente, senão fica levemente opaco durante o sorteio
                 const barColor = isCurrentHighlighted 
                   ? "#00FF66" 
                   : (highlightedStat ? "#3F3F46" : (STAT_COLORS[stat.nome] || COLORS.defaultStatColor));
@@ -113,7 +108,6 @@ export function PokemonCard({
           )}
         </View>
 
-        {/* COLUNA DA DIREITA: IMAGEM */}
         <View style={[Styles.rightColumn, compact && { width: 56, height: 56 }]}>
           {pokemon.imagem ? (
             <Image source={{ uri: pokemon.imagem }} style={compact ? Styles.pokemonImageCompact : Styles.pokemonImage} />

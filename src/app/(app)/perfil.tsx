@@ -42,7 +42,6 @@ export default function Perfil() {
         </View>
       ) : (
         <View style={styles.profileContainer}>
-          {/* Avatar */}
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarLargeText}>
               {user ? user.substring(0, 2).toUpperCase() : "TR"}
@@ -51,8 +50,6 @@ export default function Perfil() {
 
           <Text style={styles.welcomeLabel}>Bem-vindo de volta,</Text>
           <Text style={styles.trainerName}>{user || "Treinador"}</Text>
-
-          {/* Stats — sempre somente leitura */}
           <View style={styles.infoBox}>
             <View style={styles.infoRow}>
               <Text style={styles.infoKey}>Nível do Treinador</Text>

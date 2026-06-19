@@ -11,7 +11,7 @@ export function Input({ ...rest }: Props) {
     return (
         <TextInput
             style={Styles.input}
-            placeholderTextColor={COLORS.textSecondary} // Garante visibilidade do placeholder no dark mode
+            placeholderTextColor={COLORS.textSecondary} 
             {...rest}
         />
     );

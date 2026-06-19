@@ -17,7 +17,6 @@ export function PokeballButton({ onPress }: PokeballButtonProps) {
     setCapturing(true);
 
     Animated.sequence([
-      // Animação clássica de balanço
       Animated.timing(wobbleAnimation, {
         toValue: 1,
         duration: 80,
@@ -48,8 +47,6 @@ export function PokeballButton({ onPress }: PokeballButtonProps) {
         easing: Easing.out(Easing.back(1.5)),
         useNativeDriver: true,
       }),
-
-      // Pulso luminoso de sucesso
       Animated.parallel([
         Animated.timing(successOpacity, {
           toValue: 1,

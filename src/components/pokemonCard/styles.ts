@@ -16,14 +16,14 @@ export const Styles = StyleSheet.create({
   cardContent: {
     flexDirection: 'row',
     width: '100%',
-    alignItems: 'center', // Alinha tudo verticalmente ao centro (Corrige o desalinhamento)
+    alignItems: 'center', 
   },
   leftColumn: {
-    flex: 0.62, // Define um limite máximo para o comprimento dos status
+    flex: 0.62, 
     paddingRight: 4,
   },
   rightColumn: {
-    flex: 0.38, // Garante uma área proporcional e maior para a imagem
+    flex: 0.38,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -46,7 +46,6 @@ export const Styles = StyleSheet.create({
     textTransform: 'capitalize',
     flexShrink: 1,
   },
-  // Imagens muito maiores e com proporção ideal para preencher o bloco da direita
   pokemonImage: {
     width: 130,
     height: 130,

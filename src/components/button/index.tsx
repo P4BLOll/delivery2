@@ -5,7 +5,7 @@ import { Styles } from "./styles";
 type Props = TouchableOpacityProps & {
     title: string;
     style?: StyleProp<ViewStyle>; 
-    isLoading?: boolean; // Propriedade adicionada para controle centralizado de loading
+    isLoading?: boolean;
 }
 
 export function Button({ title, style, isLoading, disabled, ...rest }: Props) {

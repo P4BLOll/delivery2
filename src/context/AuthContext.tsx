@@ -67,7 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     setUserId(null);
     setIsAuthenticated(false);
-    // Remove apenas credenciais de sessão — o time persiste no backend
     await AsyncStorage.multiRemove(["@Auth:user", "@Auth:userId"]);
   }
 

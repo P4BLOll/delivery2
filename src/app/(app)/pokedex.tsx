@@ -17,7 +17,7 @@ export default function Pokedex() {
   useEffect(() => {
     async function loadData() {
       try {
-        const data = await getPokemon(1025);
+        const data = await getPokemon(151);
         setPokemon(data);
       } catch (error) {
         console.log("Erro ao carregar pokemons", error);
@@ -29,7 +29,6 @@ export default function Pokedex() {
   }, []);
 
   function handleLoadMore() {
-    // Paginação não implementada nesta versão
   }
 
   if (loading) {
@@ -42,7 +41,6 @@ export default function Pokedex() {
 
   return (
     <View style={styles.container}>
-      {/* Navbar Modular Consolidada */}
       <Header title="Pokédex" onMenuPress={() => setMenuOpen(true)} />
 
       <List

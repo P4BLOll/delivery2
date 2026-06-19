@@ -2,18 +2,15 @@ import { StyleSheet } from "react-native";
 import { COLORS } from "@/constants/Colors";
 
 export const Styles = StyleSheet.create({
-  // Fundo escurecido cobre tela inteira
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.75)",
     justifyContent: "center",
     alignItems: "center",
   },
-  // Área clicável atrás do modal (fecha ao tocar fora)
   clickableOverlay: {
     ...StyleSheet.absoluteFillObject,
   },
-  // Card central do modal
   menuContainer: {
     width: "80%",
     maxWidth: 360,
@@ -30,7 +27,6 @@ export const Styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
     gap: 16,
-    // Garante que o modal fica acima do overlay clicável
     zIndex: 1,
   },
   header: {

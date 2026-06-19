@@ -1,33 +1,30 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
-// Calcula a largura da tela para dividir os cards dinamicamente
 const { width } = Dimensions.get('window');
 const numColumns = 3;
-const cardWidth = (width - 32) / numColumns; // 32 representa o padding lateral total
+const cardWidth = (width - 32) / numColumns; 
 
 export const style = StyleSheet.create({
   container: {
     paddingHorizontal: 8,
     paddingTop: 16,
-    backgroundColor: '#121214', // Fundo principal da página em Dark Mode
+    backgroundColor: '#121214', 
   },
 });
 
 export const styles = StyleSheet.create({
   columnWrapper: {
     justifyContent: 'space-between',
-    marginBottom: 12, // Espaçamento vertical entre as fileiras de Pokémon
+    marginBottom: 12, 
   },
   pokedexCard: {
-    width: cardWidth - 8, // Ajusta o tamanho subtraindo as margens laterais
+    width: cardWidth - 8, 
     marginHorizontal: 4,
     padding: 8,
     borderRadius: 12,
-    backgroundColor: '#1A1A1E', // Card escuro e minimalista (sem bordas)
+    backgroundColor: '#1A1A1E', 
     alignItems: 'center',
     justifyContent: 'center',
-    
-    // Sombra extremamente sutil para dar profundidade no fundo escuro
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,

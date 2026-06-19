@@ -8,8 +8,7 @@ const POKEAPI_URL = axios.create({
 
 const MAX_BACKEND_TEAM_SIZE = 5;
 
-// Busca a lista completa de pokémons da PokéAPI.
-export const getPokemon = async (limit = 1025): Promise<Pokemon[]> => {
+export const getPokemon = async (limit = 151): Promise<Pokemon[]> => {
   const response = await POKEAPI_URL.get(`/pokemon?limit=${limit}`);
   const list = response.data.results;
   return await Promise.all(
@@ -20,7 +19,6 @@ export const getPokemon = async (limit = 1025): Promise<Pokemon[]> => {
   );
 };
 
-// Busca um pokémon pelo id ou nome na PokéAPI
 export const getPokemonById = async (id: number | string): Promise<Pokemon> => {
   const response = await POKEAPI_URL.get(`/pokemon/${id}`);
   return mapPokemon(response.data);
@@ -37,7 +35,6 @@ const mapPokemon = (data: any): Pokemon => ({
   })),
 });
 
-// Mapeia o objeto retornado pelo backend para o tipo Pokemon do app
 const mapBackendPokemon = (data: any): Pokemon | null => {
   if (!data) return null;
   return {
@@ -57,7 +54,6 @@ const mapBackendPokemon = (data: any): Pokemon | null => {
   };
 };
 
-// Busca o time e capturados em uma única chamada ao backend
 export const getTeamAndCaptured = async (
   userId: string
 ): Promise<{ team: (Pokemon | null)[]; captured: Pokemon[] }> => {
@@ -92,7 +88,6 @@ export const getTeamAndCaptured = async (
   return { team, captured };
 };
 
-// retorna o time do treinador 
 export const getBackendTeam = async (
   userId: string
 ): Promise<(Pokemon | null)[]> => {
@@ -100,7 +95,6 @@ export const getBackendTeam = async (
   return team;
 };
 
-// Retorna os pokémons capturados (adquiridos) do treinador que não estão no time
 export const getCapturedPokemons = async (userId: string): Promise<Pokemon[]> => {
   try {
     const { captured } = await getTeamAndCaptured(userId);
@@ -110,10 +104,7 @@ export const getCapturedPokemons = async (userId: string): Promise<Pokemon[]> =>
   }
 };
 
-// Atualiza o time via swap: troca removedPokemon por newPokemon.
-// O backend espera o user-id como query param e os pokémons no corpo
-// da requisição (TeamUpdateRequest). Enviar como query params resulta
-// em 400 "Required request body is missing".
+
 export const updateBackendTeam = async (
   userId: string,
   removedPokemon: string,
@@ -128,7 +119,6 @@ export const updateBackendTeam = async (
   );
 };
 
-// Adiciona um pokémon capturado
 export const addCapturedPokemon = async (
   userId: string,
   pokemonId: string | number
@@ -141,7 +131,6 @@ export const addCapturedPokemon = async (
   });
 };
 
-// Remove um pokémon capturado
 export const deleteCapturedPokemon = async (
   userId: string,
   pokemonId: string | number
